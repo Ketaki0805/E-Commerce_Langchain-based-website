@@ -1,7 +1,8 @@
 from typing import List, Dict
 import numpy as np
-from semantic_router import Route, RouteLayer
-from semantic_router.encoders.tfidf import TfidfEncoder
+from semantic_router import Route
+from semantic_router.routers import SemanticRouter as SR
+from semantic_router.encoders import HuggingFaceEncoder
 
 PRODUCT_SAMPLE = [
     "how much does this dress cost", "what colors are available for this shirt",
@@ -58,9 +59,11 @@ CHITCHAT_ROUTE_NAME = 'chitchat'
 
 class SemanticRouter:
     def __init__(self):
-        self.embedding = TfidfEncoder()
-        
-        # Initialize the routes first
+        # Use HuggingFace encoder instead of TfidfEncoder
+        # This is a lightweight, local encoder that works well for semantic routing
+        self.embedding = HuggingFaceEncoder(name="sentence-transformers/all-MiniLM-L6-v2")
+
+        # Initialize the routes
         self.product_route = Route(
             name=PRODUCT_ROUTE_NAME,
             utterances=PRODUCT_SAMPLE,
@@ -70,20 +73,36 @@ class SemanticRouter:
             utterances=CHITCHAT_SAMPLE,
         )
         self.routes = [self.product_route, self.chitchat_route]
-        
-        # Now fit the TfidfEncoder with the routes
-        self.embedding.fit(self.routes)
 
-        self.route_layer = RouteLayer(encoder=self.embedding, routes=self.routes)
+        # Create the semantic router with the new API
+        self.route_layer = SR(
+            encoder=self.embedding,
+            routes=self.routes,
+            auto_sync="local"  # Use local storage for route syncing
+        )
 
     def similarity(self, query: str, route: Route) -> float:
-        # Calculate similarity between query and route
-        # Using the transform method instead of encode
-        query_embedding = self.embedding.transform([query])[0]
-        route_embedding = self.embedding.transform(route.utterances)
-        return np.mean(np.dot(query_embedding, route_embedding.T))
+        """Calculate similarity between query and route using embeddings"""
+        # Encode the query and route utterances
+        query_embedding = np.array(self.embedding([query])[0])
+        route_embeddings = np.array(self.embedding(route.utterances))
+
+        # Calculate cosine similarity
+        similarities = []
+        for route_emb in route_embeddings:
+            dot_product = np.dot(query_embedding, route_emb)
+            norm_product = np.linalg.norm(query_embedding) * np.linalg.norm(route_emb)
+            similarity = dot_product / norm_product if norm_product > 0 else 0
+            similarities.append(similarity)
+
+        return np.mean(similarities)
 
     def guide(self, query: str) -> str:
+        """Route the query to the appropriate handler"""
         # Use the route_layer to determine the best route
         best_route = self.route_layer(query)
-        return best_route.name if best_route else CHITCHAT_ROUTE_NAME
+
+        # Handle the response - the new API returns a RouteChoice object or None
+        if best_route and hasattr(best_route, 'name'):
+            return best_route.name
+        return CHITCHAT_ROUTE_NAME

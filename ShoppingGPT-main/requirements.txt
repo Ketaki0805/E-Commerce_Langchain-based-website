@@ -1,41 +1,41 @@
 # Core Framework
-Flask>=3.0.0,<4.0.0
-Werkzeug>=3.0.0,<4.0.0
+Flask==3.0.0
+Werkzeug==3.0.1
 
 # LangChain and AI Components
-langchain>=0.1.0,<0.2.0
-langchain-community>=0.0.13
-langchain-google-genai>=0.0.6
+langchain==0.1.0
+langchain-community==0.0.13
+langchain-google-genai==0.0.6
 
 # Google Generative AI
-google-generativeai>=0.3.0
-google-ai-generativelanguage>=0.4.0
+google-generativeai==0.3.2
+google-ai-generativelanguage==0.4.0
 
-# Semantic Router
-semantic-router>=0.0.26
+# Semantic Router (install with local encoders support)
+semantic-router[local]>=0.0.52
 
 # Vector Stores and Embeddings
-faiss-cpu>=1.8.0
-sentence-transformers>=2.2.0
+faiss-cpu==1.8.0
+sentence-transformers==2.2.2
 
 # Database
-SQLAlchemy>=2.0.0,<3.0.0
+SQLAlchemy==2.0.25
 
 # Hugging Face
-transformers>=4.36.0
-torch>=2.1.0
+transformers==4.36.2
+torch==2.1.2
 
 # Environment Management
-python-dotenv>=1.0.0
+python-dotenv==1.0.0
 
 # Additional Utilities
-numpy>=1.24.0
-pandas>=2.0.0
-tqdm>=4.66.0
+numpy==1.26.3
+pandas==2.1.4
+tqdm==4.66.1
 
 # Web Server (Production)
-gunicorn>=21.0.0
+gunicorn==21.2.0
 
 # Testing (Optional)
-pytest>=7.4.0
-pytest-flask>=1.3.0
+pytest==7.4.3
+pytest-flask==1.3.0
